@@ -17,11 +17,17 @@ class GameStats:
         # High score should never be reset.
         self.high_score = 0
 
+        # A game count that will indicate whether the player has lost any games
+        self.games_count = 0
+
+    def increase_game_count(self):
+        self.games_count += 1
+
     def reset_stats(self):
         """Initialize statistics that can change during the game."""
         self.ships_left = self.ai_settings.ship_limit
         self.score = 0
-        self.level = 2
+        self.level = 1
         self.close_asteroids_timer()
 
     def close_asteroids_timer(self):

@@ -10,7 +10,7 @@ from alien import Alien
 from asteroid import Asteroid
 
 
-def check_keydown_events(event, ai_settings, screen, ship, bullets):
+def check_keydown_events(event, ai_settings, screen, ship, bullets, aliens):
     """Respond to keypresses."""
     if event.key == pygame.K_RIGHT:
         ship.moving_right = True
@@ -20,6 +20,9 @@ def check_keydown_events(event, ai_settings, screen, ship, bullets):
         fire_bullet(ai_settings, screen, ship, bullets)
     elif event.key == pygame.K_q:
         sys.exit()
+    elif event.key == pygame.K_e:
+        aliens.empty()
+    
 
 
 def check_keyup_events(event, ship):
@@ -40,7 +43,7 @@ def check_events(
             stats.close_asteroids_timer()
             sys.exit()
         elif event.type == pygame.KEYDOWN:
-            check_keydown_events(event, ai_settings, screen, ship, bullets)
+            check_keydown_events(event, ai_settings, screen, ship, bullets, aliens)
         elif event.type == pygame.KEYUP:
             check_keyup_events(event, ship)
         elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -116,6 +119,21 @@ def fire_bullet(ai_settings, screen, ship, bullets):
         bullets.add(new_bullet)
 
 
+def draw_home_page(screen):
+    home_image = pygame.image.load("home.png")
+    screen.blit(home_image, (0, 0))
+
+
+def draw_gameover_page(screen):
+    gameover_image = pygame.image.load("game_over.png")
+    screen.blit(gameover_image, (0, -150))
+
+
+def draw_levelup_page(screen):
+    levelup_image = pygame.image.load("level_up.png")
+    screen.blit(levelup_image, (0, 0))
+
+
 def update_screen(
     ai_settings, screen, stats, sb, ship, aliens, bullets, asteroids, play_button
 ):
@@ -126,15 +144,20 @@ def update_screen(
     # Redraw all bullets, behind ship and aliens.
     for bullet in bullets.sprites():
         bullet.draw_bullet()
-    ship.blitme()
-    aliens.draw(screen)
-    asteroids.draw(screen)
+    if stats.game_active:
+        ship.blitme()
+        aliens.draw(screen)
+        asteroids.draw(screen)
 
     # Draw the score information.
     sb.show_score()
 
     # Draw the play button if the game is inactive.
     if not stats.game_active:
+        if stats.games_count == 0:
+            draw_home_page(screen)
+        else:
+            draw_gameover_page(screen)
         play_button.draw_button()
 
     # Make the most recently drawn screen visible.
@@ -193,6 +216,9 @@ def check_bullet_alien_collisions(
 
         # Increase level.
         stats.level += 1
+        draw_levelup_page(screen)
+        pygame.display.update()
+        sleep(3)
         sb.prep_level()
 
         create_fleet(ai_settings, screen, ship, aliens)
@@ -216,6 +242,7 @@ def change_fleet_direction(ai_settings, aliens):
 def ship_hit(ai_settings, screen, stats, sb, ship, aliens, bullets, asteroids):
     """Respond to ship being hit by alien."""
     stats.close_asteroids_timer()
+    stats.increase_game_count()
     if stats.ships_left > 0:
         # Decrement ships_left.
         stats.ships_left -= 1

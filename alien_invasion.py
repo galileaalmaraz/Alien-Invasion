@@ -48,10 +48,6 @@ def run_game():
 
         i -= 1
 
-        # # Starting page
-        # home_image = pygame.image.load('home.png')
-        # screen.blit(home_image, (0, 0))
-
         # Make the Play button.
         play_button = Button(ai_settings, screen, "PLAY")
 
