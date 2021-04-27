@@ -3,8 +3,11 @@ from time import sleep
 
 import pygame
 
+from repeated_timer import RepeatedTimer
+
 from bullet import Bullet
 from alien import Alien
+from asteroid import Asteroid
 
 
 def check_keydown_events(event, ai_settings, screen, ship, bullets):
@@ -27,11 +30,14 @@ def check_keyup_events(event, ship):
         ship.moving_left = False
 
 
-def check_events(ai_settings, screen, stats, sb, play_button, ship, aliens, bullets):
+def check_events(
+    ai_settings, screen, stats, sb, play_button, ship, aliens, bullets, asteroids
+):
     """Respond to keypresses and mouse events."""
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
+            stats.close_asteroids_timer()
             sys.exit()
         elif event.type == pygame.KEYDOWN:
             check_keydown_events(event, ai_settings, screen, ship, bullets)
@@ -48,13 +54,25 @@ def check_events(ai_settings, screen, stats, sb, play_button, ship, aliens, bull
                 ship,
                 aliens,
                 bullets,
+                asteroids,
                 mouse_x,
                 mouse_y,
             )
 
 
 def check_play_button(
-    ai_settings, screen, stats, sb, play_button, ship, aliens, bullets, mouse_x, mouse_y):
+    ai_settings,
+    screen,
+    stats,
+    sb,
+    play_button,
+    ship,
+    aliens,
+    bullets,
+    asteroids,
+    mouse_x,
+    mouse_y,
+):
     """Start a new game when the player clicks Play."""
     button_clicked = play_button.rect.collidepoint(mouse_x, mouse_y)
     if button_clicked and not stats.game_active:
@@ -77,6 +95,13 @@ def check_play_button(
         # Empty the list of aliens and bullets.
         aliens.empty()
         bullets.empty()
+        asteroids.empty()
+
+        stats.set_asteroids_timer(
+            start_asteroid_creation_timer(
+                ai_settings, screen, stats, sb, ship, asteroids
+            )
+        )
 
         # Create a new fleet and center the ship.
         create_fleet(ai_settings, screen, ship, aliens)
@@ -91,7 +116,9 @@ def fire_bullet(ai_settings, screen, ship, bullets):
         bullets.add(new_bullet)
 
 
-def update_screen(ai_settings, screen, stats, sb, ship, aliens, bullets, play_button):
+def update_screen(
+    ai_settings, screen, stats, sb, ship, aliens, bullets, asteroids, play_button
+):
     """Update images on the screen, and flip to the new screen."""
     # Redraw the screen, each pass through the loop.
     # screen.fill(ai_settings.bg_color)
@@ -101,6 +128,7 @@ def update_screen(ai_settings, screen, stats, sb, ship, aliens, bullets, play_bu
         bullet.draw_bullet()
     ship.blitme()
     aliens.draw(screen)
+    asteroids.draw(screen)
 
     # Draw the score information.
     sb.show_score()
@@ -113,7 +141,7 @@ def update_screen(ai_settings, screen, stats, sb, ship, aliens, bullets, play_bu
     pygame.display.flip()
 
 
-def update_bullets(ai_settings, screen, stats, sb, ship, aliens, bullets):
+def update_bullets(ai_settings, screen, stats, sb, ship, aliens, bullets, asteroids):
     """Update position of bullets, and get rid of old bullets."""
     # Update bullet positions.
     bullets.update()
@@ -123,7 +151,12 @@ def update_bullets(ai_settings, screen, stats, sb, ship, aliens, bullets):
         if bullet.rect.bottom <= 0:
             bullets.remove(bullet)
 
-    check_bullet_alien_collisions(ai_settings, screen, stats, sb, ship, aliens, bullets)
+    check_bullet_alien_collisions(
+        ai_settings, screen, stats, sb, ship, aliens, bullets, asteroids
+    )
+    check_bullet_asteroid_collisions(
+        ai_settings, screen, stats, sb, ship, asteroids, bullets
+    )
 
 
 def check_high_score(stats, sb):
@@ -134,7 +167,7 @@ def check_high_score(stats, sb):
 
 
 def check_bullet_alien_collisions(
-    ai_settings, screen, stats, sb, ship, aliens, bullets
+    ai_settings, screen, stats, sb, ship, aliens, bullets, asteroids
 ):
     """Respond to bullet-alien collisions."""
     # Remove any bullets and aliens that have collided.
@@ -149,7 +182,14 @@ def check_bullet_alien_collisions(
     if len(aliens) == 0:
         # If the entire fleet is destroyed, start a new level.
         bullets.empty()
+        asteroids.empty()
         ai_settings.increase_speed()
+        stats.close_asteroids_timer()
+        stats.set_asteroids_timer(
+            start_asteroid_creation_timer(
+                ai_settings, screen, stats, sb, ship, asteroids
+            )
+        )
 
         # Increase level.
         stats.level += 1
@@ -173,11 +213,17 @@ def change_fleet_direction(ai_settings, aliens):
     ai_settings.fleet_direction *= -1
 
 
-def ship_hit(ai_settings, screen, stats, sb, ship, aliens, bullets):
+def ship_hit(ai_settings, screen, stats, sb, ship, aliens, bullets, asteroids):
     """Respond to ship being hit by alien."""
+    stats.close_asteroids_timer()
     if stats.ships_left > 0:
         # Decrement ships_left.
         stats.ships_left -= 1
+        stats.set_asteroids_timer(
+            start_asteroid_creation_timer(
+                ai_settings, screen, stats, sb, ship, asteroids
+            )
+        )
 
         # Update scoreboard.
         sb.prep_ships()
@@ -189,6 +235,7 @@ def ship_hit(ai_settings, screen, stats, sb, ship, aliens, bullets):
     # Empty the list of aliens and bullets.
     aliens.empty()
     bullets.empty()
+    asteroids.empty()
 
     # Create a new fleet, and center the ship.
     create_fleet(ai_settings, screen, ship, aliens)
@@ -198,17 +245,19 @@ def ship_hit(ai_settings, screen, stats, sb, ship, aliens, bullets):
     sleep(0.5)
 
 
-def check_aliens_bottom(ai_settings, screen, stats, sb, ship, aliens, bullets):
+def check_aliens_bottom(
+    ai_settings, screen, stats, sb, ship, aliens, bullets, asteroids
+):
     """Check if any aliens have reached the bottom of the screen."""
     screen_rect = screen.get_rect()
     for alien in aliens.sprites():
         if alien.rect.bottom >= screen_rect.bottom:
             # Treat this the same as if the ship got hit.
-            ship_hit(ai_settings, screen, stats, sb, ship, aliens, bullets)
+            ship_hit(ai_settings, screen, stats, sb, ship, aliens, bullets, asteroids)
             break
 
 
-def update_aliens(ai_settings, screen, stats, sb, ship, aliens, bullets):
+def update_aliens(ai_settings, screen, stats, sb, ship, aliens, bullets, asteroids):
     """
     Check if the fleet is at an edge,
       then update the postions of all aliens in the fleet.
@@ -218,10 +267,12 @@ def update_aliens(ai_settings, screen, stats, sb, ship, aliens, bullets):
 
     # Look for alien-ship collisions.
     if pygame.sprite.spritecollideany(ship, aliens):
-        ship_hit(ai_settings, screen, stats, sb, ship, aliens, bullets)
+        ship_hit(ai_settings, screen, stats, sb, ship, aliens, bullets, asteroids)
 
     # Look for aliens hitting the bottom of the screen.
-    check_aliens_bottom(ai_settings, screen, stats, sb, ship, aliens, bullets)
+    check_aliens_bottom(
+        ai_settings, screen, stats, sb, ship, aliens, bullets, asteroids
+    )
 
 
 def get_number_aliens_x(ai_settings, alien_width):
@@ -259,3 +310,62 @@ def create_fleet(ai_settings, screen, ship, aliens):
     for row_number in range(number_rows):
         for alien_number in range(number_aliens_x):
             create_alien(ai_settings, screen, aliens, alien_number, row_number)
+
+
+def create_asteroid(ai_settings, screen, asteroids):
+    """Create an asteroid and add it to the asteroids group"""
+    asteroid = Asteroid(ai_settings, screen)
+    asteroids.add(asteroid)
+
+
+def check_asteroids_bottom(
+    ai_settings, screen, stats, sb, ship, aliens, bullets, asteroids
+):
+    """Check if any aliens have reached the bottom of the screen."""
+    screen_rect = screen.get_rect()
+    for asteroid in asteroids.sprites():
+        if asteroid.rect.bottom >= screen_rect.bottom:
+            # Treat this the same as if the ship got hit.
+            ship_hit(ai_settings, screen, stats, sb, ship, aliens, bullets, asteroids)
+            break
+
+
+def update_asteroids(ai_settings, screen, stats, sb, ship, aliens, bullets, asteroids):
+    """A function that will update the position of the asteroids and randomly add them while the game is running."""
+    asteroids.update()
+
+    # Look for asteroid-ship collisions.
+    if pygame.sprite.spritecollideany(ship, asteroids):
+        ship_hit(ai_settings, screen, stats, sb, ship, aliens, bullets, asteroids)
+
+    check_asteroids_bottom(
+        ai_settings, screen, stats, sb, ship, aliens, bullets, asteroids
+    )
+
+
+def check_bullet_asteroid_collisions(
+    ai_settings, screen, stats, sb, ship, asteroids, bullets
+):
+    """Respond to bullet-asteroid collisions."""
+    # Remove any bullets and aliens that have collided.
+    collisions = pygame.sprite.groupcollide(bullets, asteroids, True, True)
+
+    if collisions:
+        for asteroids in collisions.values():
+            stats.score += ai_settings.asteroid_points * len(asteroids)
+            sb.prep_score()
+        check_high_score(stats, sb)
+
+
+def start_asteroid_creation_timer(ai_settings, screen, stats, sb, ship, asteroids):
+    if stats.level >= stats.MIN_HARD_LEVEL:
+        timer = RepeatedTimer(
+            ai_settings.base_asteroids_timer_interval / stats.level,
+            create_asteroid,
+            ai_settings,
+            screen,
+            asteroids,
+        )
+        timer.start()
+        return timer
+    return None

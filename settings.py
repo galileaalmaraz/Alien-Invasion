@@ -19,13 +19,19 @@ class Settings:
         self.bullet_color = 255, 0, 0
         self.bullets_allowed = 3
 
+        # Asteroid settings
+        self.asteroid_length = 20
+
         # Alien settings.
         self.fleet_drop_speed = 15
 
         # How quickly the game speeds up.
         self.speedup_scale = 5
-        # How quickly the alien point values increase.
+        # How quickly the alien and asteroid point values increase.
         self.score_scale = 1.5
+
+        # Asteroids creation settings
+        self.base_asteroids_timer_interval = 10
 
         self.initialize_dynamic_settings()
 
@@ -34,9 +40,11 @@ class Settings:
         self.ship_speed_factor = 8
         self.bullet_speed_factor = 10
         self.alien_speed_factor = 1
+        self.asteroid_speed_factor = 10
 
         # Scoring.
         self.alien_points = 50
+        self.asteroid_points = 40
 
         # fleet_direction of 1 represents right, -1 represents left.
         self.fleet_direction = 1
@@ -46,5 +54,7 @@ class Settings:
         self.ship_speed_factor *= self.speedup_scale
         self.bullet_speed_factor *= self.speedup_scale
         self.alien_speed_factor *= self.speedup_scale
+        self.asteroid_speed_factor *= self.speedup_scale 
 
         self.alien_points = int(self.alien_points * self.score_scale)
+        self.asteroid_points = int(self.asteroid_points * self.score_scale)
