@@ -5,6 +5,9 @@ import pygame
 
 from repeated_timer import RepeatedTimer
 
+from pygame_textinput import TextInput
+from text_message import Message
+
 from bullet import Bullet
 from alien import Alien
 from asteroid import Asteroid
@@ -40,6 +43,18 @@ def check_events(
             stats.close_asteroids_timer()
             sys.exit()
         elif event.type == pygame.KEYDOWN:
+            # debugging
+            if event.key == pygame.K_k:
+                ship_hit(
+                    ai_settings, screen, stats, sb, ship, aliens, bullets, asteroids
+                )
+            # debugging
+            if event.key == pygame.K_n:
+                aliens.empty()
+                check_bullet_alien_collisions(
+                    ai_settings, screen, stats, sb, ship, aliens, bullets, asteroids
+                )
+            # debugging
             check_keydown_events(event, ai_settings, screen, ship, bullets)
         elif event.type == pygame.KEYUP:
             check_keyup_events(event, ship)
@@ -131,6 +146,16 @@ def draw_levelup_page(screen):
     screen.blit(levelup_image, (0, 0))
 
 
+def draw_background_image(screen):
+    bg_image = pygame.image.load("./assets/stars.png")
+    screen.blit(bg_image, (0, 0))
+
+
+def draw_saveusername_page(screen):
+    saveusername_image = pygame.image.load("./assets/save_username.png")
+    screen.blit(saveusername_image, (0, 0))
+
+
 def update_screen(
     ai_settings, screen, stats, sb, ship, aliens, bullets, asteroids, play_button
 ):
@@ -155,6 +180,12 @@ def update_screen(
             draw_home_page(screen)
         else:
             draw_gameover_page(screen)
+            if not stats.is_new_game:
+                pygame.display.flip()
+                sleep(2)
+                username = ask_player_for_username(screen, stats)
+                stats.set_username(username)
+                stats.end_game()
         play_button.draw_button()
 
     # Make the most recently drawn screen visible.
@@ -234,6 +265,46 @@ def change_fleet_direction(ai_settings, aliens):
     for alien in aliens.sprites():
         alien.rect.y += ai_settings.fleet_drop_speed
     ai_settings.fleet_direction *= -1
+
+
+def ask_player_for_username(screen, stats):
+    fontsize = 35
+    inputfield = TextInput(
+        "USERNAME",
+        font_family="Ariel",
+        text_color=pygame.Color("white"),
+        cursor_color=pygame.Color("red"),
+        font_size=fontsize,
+    )
+    username = None
+    myfont = pygame.font.SysFont("sans serif", fontsize)
+    message = Message(
+        (550, 550),
+        "Type your name & press Enter",
+        font=myfont,
+        color=pygame.Color("green"),
+    )
+
+    while True:
+        draw_background_image(screen)
+        draw_saveusername_page(screen)
+        events = pygame.event.get()
+        for event in events:
+            if event.type == pygame.QUIT:
+                stats.close_asteroids_timer()
+                sys.exit()
+
+        if inputfield.update(events):
+            username = inputfield.get_text()
+            break
+
+        screen.blit(
+            inputfield.get_surface(),
+            (650, 500),
+        )
+        message.blitme(screen)
+        pygame.display.update()
+    return username
 
 
 def ship_hit(ai_settings, screen, stats, sb, ship, aliens, bullets, asteroids):

@@ -1,35 +1,52 @@
-import csv
+import json
+import datetime as dt
 
 
 class GameScore:
-    CSV_FILENAME = "./scores.csv"
-    FIELDNAMES = ["username", "duration", "score"]
+    JSON_FILENAME = "./scores.json"
+    FIELDNAMES = ["username", "levels"]
+    EMPTY_lEVEL = {"level": None, "duration": None, "score": None}
 
-    def __init__(self, username, duration, score):
+    def __init__(self, username):
         self.username = username
-        self.duration = duration
-        self.score = score
+        self.levels = []
+
+    def add_level(self, level, starttime, endtime, score):
+        new_level_data = dict()
+        new_level_data["level"] = level
+        new_level_data["starttime"] = starttime
+        new_level_data["endtime"] = endtime
+        new_level_data["score"] = score
+        self.levels.append(new_level_data)
+
+    def _is_file_clear(self):
+        with open(self.JSON_FILENAME, "r") as f:
+            data = f.read()
+        if data.strip() == "":
+            return True
+        return False
 
     def _get_self_dict(self):
-        return {field: getattr(self, field) for field in self.FIELDNAMES}
-
-    def _does_header_exist(self):
-        header_exists = False
-        with open(self.CSV_FILENAME, "r") as f:
-            if f.readline().strip().split(",") == self.FIELDNAMES:
-                header_exists = True
-        return header_exists
+        mydict = {field: getattr(self, field) for field in self.FIELDNAMES}
+        return mydict
 
     def save(self):
-        with open(self.CSV_FILENAME, "a") as f:
-            writer = csv.DictWriter(f, fieldnames=self.FIELDNAMES)
-            if not self._does_header_exist():
-                writer.writeheader()
-            writer.writerow(self._get_self_dict())
+        if self._is_file_clear():
+            with open(self.JSON_FILENAME, "w") as f:
+                f.write("[]")
+
+        with open(self.JSON_FILENAME, "r") as f:
+            records = json.load(f)
+
+        records.append(self._get_self_dict())
+
+        with open(self.JSON_FILENAME, "w") as f:
+            json.dump(records, f, default=str)
 
 
 def main():
-    score = GameScore("Mena", 312, 312313)
+    score = GameScore("Mena")
+    score.add_level(2, dt.datetime.now(), dt.datetime.now(), 1400)
     score.save()
 
 
