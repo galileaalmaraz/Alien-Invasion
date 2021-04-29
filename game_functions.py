@@ -8,6 +8,7 @@ from repeated_timer import RepeatedTimer
 from pygame_textinput import TextInput
 from text_message import Message
 
+from button import Button
 from bullet import Bullet
 from alien import Alien
 from asteroid import Asteroid
@@ -156,6 +157,37 @@ def draw_saveusername_page(screen):
     screen.blit(saveusername_image, (0, 0))
 
 
+def draw_missioncomplete_page(screen):
+    missioncomplete_image = pygame.image.load("./assets/mission_complete.png")
+    screen.blit(missioncomplete_image, (0, 0))
+
+
+def display_mission_complete(screen, stats):
+    draw_background_image(screen)
+
+    next_level_button = Button(None, screen, "Next Level")
+    next_level_button.rect.x = 620
+    next_level_button.rect.y = 620
+
+    while True:
+        draw_missioncomplete_page(screen)
+        event = pygame.event.poll()
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_x, mouse_y = pygame.mouse.get_pos()
+            button_clicked = next_level_button.rect.collidepoint(mouse_x, mouse_y)
+            if button_clicked:
+                break
+        elif event.type == pygame.QUIT:
+            stats.close_asteroids_timer()
+            sys.exit()
+
+        next_level_button.draw_button()
+        pygame.display.flip()
+
+    draw_background_image(screen)
+    pygame.display.flip()
+
+
 def update_screen(
     ai_settings, screen, stats, sb, ship, aliens, bullets, asteroids, play_button
 ):
@@ -186,6 +218,7 @@ def update_screen(
                 username = ask_player_for_username(screen, stats)
                 stats.set_username(username)
                 stats.end_game()
+                show_user_scores(screen, stats)
         play_button.draw_button()
 
     # Make the most recently drawn screen visible.
@@ -244,6 +277,7 @@ def check_bullet_alien_collisions(
 
         # Increase level.
         stats.level += 1
+        display_mission_complete(screen, stats)
         draw_levelup_page(screen)
         pygame.display.update()
         sleep(3)
