@@ -117,17 +117,17 @@ def fire_bullet(ai_settings, screen, ship, bullets):
 
 
 def draw_home_page(screen):
-    home_image = pygame.image.load("home.png")
+    home_image = pygame.image.load("./assets/home.png")
     screen.blit(home_image, (0, 0))
 
 
 def draw_gameover_page(screen):
-    gameover_image = pygame.image.load("game_over.png")
+    gameover_image = pygame.image.load("./assets/game_over.png")
     screen.blit(gameover_image, (0, -150))
 
 
 def draw_levelup_page(screen):
-    levelup_image = pygame.image.load("level_up.png")
+    levelup_image = pygame.image.load("./assets/level_up.png")
     screen.blit(levelup_image, (0, 0))
 
 

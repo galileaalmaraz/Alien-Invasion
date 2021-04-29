@@ -24,7 +24,7 @@ def run_game():
     sb = Scoreboard(ai_settings, screen, stats)
 
     # Set the background
-    bg_image = pygame.image.load("stars.png")
+    bg_image = pygame.image.load("./assets/stars.png")
     i = 0
     image_width = 1440
 

@@ -12,7 +12,7 @@ class Asteroid(Sprite):
         self.screen = screen
 
         # Load the asteroid image, and set its rect attribute.
-        self.image = pygame.image.load("asteroid.bmp")
+        self.image = pygame.image.load("./assets/asteroid.bmp")
         self.rect = self.image.get_rect()
 
         # Position the asteroid rect as a random horizontal position at the beginning of the screen
