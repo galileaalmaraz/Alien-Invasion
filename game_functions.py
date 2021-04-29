@@ -5,6 +5,8 @@ import pygame
 
 from repeated_timer import RepeatedTimer
 
+from graph import create_graphs
+
 from pygame_textinput import TextInput
 from text_message import Message
 
@@ -219,6 +221,7 @@ def update_screen(
                 username = ask_player_for_username(screen, stats)
                 stats.set_username(username)
                 stats.end_game()
+                create_graphs()
                 show_user_scores(screen, stats)
         play_button.draw_button()
 
