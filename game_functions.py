@@ -225,6 +225,58 @@ def update_screen(
     pygame.display.flip()
 
 
+def show_user_scores(screen, stats):
+    draw_background_image(screen)
+    continue_button = Button(None, screen, "Continue")
+    continue_button.rect.x = 620
+    continue_button.rect.y = 620
+    draw_yourscore_page(screen)
+    draw_score(screen, stats)
+
+    while True:
+        event = pygame.event.poll()
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_x, mouse_y = pygame.mouse.get_pos()
+            button_clicked = continue_button.rect.collidepoint(mouse_x, mouse_y)
+            if button_clicked:
+                break
+        elif event.type == pygame.QUIT:
+            stats.close_asteroids_timer()
+            sys.exit()
+
+        continue_button.draw_button()
+        pygame.display.flip()
+
+    draw_background_image(screen)
+    pygame.display.flip()
+
+
+def draw_yourscore_page(screen):
+    yourscore_image = pygame.image.load("./assets/score_panel.png")
+    screen.blit(
+        yourscore_image,
+        (0, 0),
+    )
+
+
+def draw_score(screen, stats):
+    myfont = pygame.font.SysFont("sans serif", 35)
+    message = Message(
+        (620, 380),
+        f"Score: {stats.score}",
+        myfont,
+        color=pygame.Color("white"),
+    )
+    message2 = Message(
+        (620, 400),
+        f"High Score: {stats.high_score}",
+        myfont,
+        color=pygame.Color("white"),
+    )
+    message.blitme(screen)
+    message2.blitme(screen)
+
+
 def update_bullets(ai_settings, screen, stats, sb, ship, aliens, bullets, asteroids):
     """Update position of bullets, and get rid of old bullets."""
     # Update bullet positions.
