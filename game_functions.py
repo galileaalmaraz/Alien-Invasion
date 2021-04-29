@@ -154,7 +154,8 @@ def draw_background_image(screen):
 
 def draw_saveusername_page(screen):
     saveusername_image = pygame.image.load("./assets/save_username.png")
-    screen.blit(saveusername_image, (0, 0))
+    saveusername_image = pygame.transform.scale(saveusername_image, (800, 400))
+    screen.blit(saveusername_image, (320, 200))
 
 
 def draw_missioncomplete_page(screen):
