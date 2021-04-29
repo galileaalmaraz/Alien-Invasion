@@ -88,6 +88,8 @@ class GameStats:
 
     def end_game(self):
         assert self.username is not None
+        self._level_end_time = datetime.datetime.now()
+        self.record_level_data()
         self.current_game_score.username = self.username
         self.current_game_score.save()
         self.is_new_game = True
