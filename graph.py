@@ -145,6 +145,3 @@ def create_graphs():
     draw_pie_chart()
     draw_bar_graph()
     draw_line_graph()
-
-
-create_graphs()
